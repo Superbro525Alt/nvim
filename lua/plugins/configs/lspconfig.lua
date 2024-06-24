@@ -1,11 +1,12 @@
+-- Load on_attach and capabilities from the base LSP config
+--
 dofile(vim.g.base46_cache .. "lsp")
 require "nvchad.lsp"
 
 local M = {}
 local utils = require "core.utils"
 
--- export on_attach & capabilities for custom lspconfigs
-
+-- Define on_attach and capabilities
 M.on_attach = function(client, bufnr)
   utils.load_mappings("lspconfig", { buffer = bufnr })
 
@@ -38,6 +39,7 @@ M.capabilities.textDocument.completion.completionItem = {
   },
 }
 
+-- Setup lua_ls
 require("lspconfig").lua_ls.setup {
   on_attach = M.on_attach,
   capabilities = M.capabilities,
@@ -61,4 +63,32 @@ require("lspconfig").lua_ls.setup {
   },
 }
 
+-- require("lspconfig").jdtls.setup {
+--   on_attach = M.on_attach,
+--   capabilities = require("cmp_nvim_lsp").default_capabilities(),
+--   cmd = { vim.fn.expand("~/.local/share/nvim/mason/bin/jdtls") },
+--   root_dir = require('lspconfig').util.root_pattern('.git', 'pom.xml', 'build.gradle'),
+--   settings = {
+--     -- java = {
+--     --   signatureHelp = { enabled = true },
+--     --   import = { enabled = true },
+--     --   rename = { enabled = true },
+--     -- }
+--   },
+-- }
+
+vim.api.nvim_create_autocmd({ "FileType" }, {
+    pattern = "java",
+    callback = function()
+        local jdtls = require("jdtls");
+        jdtls.start_or_attach({
+            capabilities = require("cmp_nvim_lsp").default_capabilities(),
+            cmd = { vim.fn.expand("~/.local/share/nvim/mason/bin/jdtls") },
+            root_dir = jdtls.setup.find_root({ "java-workspace" }),
+        })
+    end
+})
+
+
+-- Export module
 return M
